@@ -46,14 +46,17 @@ func ParseUrl(inputURL string, defaultPort uint16) (*UrlSchema, error) {
 		Name:     parsedURL.Fragment,
 		Params:   make(map[string]string),
 	}
-	userInfo, err := decodeBase64IfNeeded(data.Username)
-	// fmt.Print(userInfo)
-	if err == nil {
-		// If decoding is successful, use the decoded string
-		userDetails := strings.SplitN(userInfo, ":", 2)
-		if len(userDetails) > 1 {
-			data.Username = userDetails[0]
-			data.Password = userDetails[1]
+	// VLESS userinfo is an authentication identifier, not a Base64 credential pair.
+	// url.Parse has already applied the URI's userinfo percent-decoding.
+	if data.Scheme != "vless" && data.Scheme != "svless" && data.Scheme != "xvless" {
+		userInfo, err := decodeBase64IfNeeded(data.Username)
+		if err == nil {
+			// If decoding is successful, use the decoded string
+			userDetails := strings.SplitN(userInfo, ":", 2)
+			if len(userDetails) > 1 {
+				data.Username = userDetails[0]
+				data.Password = userDetails[1]
+			}
 		}
 	}
 
